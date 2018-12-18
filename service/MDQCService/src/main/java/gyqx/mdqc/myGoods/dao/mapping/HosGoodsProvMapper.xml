@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="gyqx.mdqc.myGoods.dao.mapper.HosGoodsProvMapper">
+    <select id="getHosProvInfoVoList" resultType="hashmap">
+        select bci.id AS PROVID, bci.CNAME AS PROVNAME from prov_goods_info hgi inner join bas_company_info bci on hgi.prov_id = bci.id group by bci.id, bci.cname
+    </select>
+
+    <!--pg.hit_price as provGoodsHitPrice,-->
+    <select id="getProGoods4HosList" resultType="gyqx.mdqc.myGoods.vo.ProvGoods4HosVo"
+            parameterType="gyqx.mdqc.myGoods.vo.ProvGoods4HosVo">
+        SELECT
+            pg.id,
+            m.cname as provGoodsMfrsName,
+            pg.code as provGoodsCode,
+            pg.goods_name as provGoodsName,
+            pg.short_pinyin as provGoodsShortPinyin,
+            pg.goods_gg as provGoodsGg,
+            pg.made as provGoodsMade,
+            pg.mfrs_id as provGoodsMfrsId,
+            pg.unit as provGoodsUnit,
+            pg.packeage AS provGoodsPackeage,
+            pg.master_code as provGoodsMasterCode,
+            pg.mfrs_code as provGoodsMfrsCode,
+            pg.kind_code as provGoodsKindCode,
+            pg.kind_68code AS provGoodsKind68code,
+            pg.erp_code AS provGoodsErpCode,
+            pg.hit_code AS provGoodsHitCode,
+            pg.spd_goods_code AS provGoodsSpdGoodsCode,
+            pg.lbsx AS provGoodsLbsx,
+            pg.id as provGoodsId,
+            c.cname as provName,
+            pg.brand as brand,
+            pg.prov_id as provId
+        FROM prov_goods_info pg
+        LEFT OUTER JOIN bas_company_info m
+          ON pg.mfrs_id = m.id
+        INNER JOIN bas_company_info c
+          ON pg.prov_id = c.id
+        INNER JOIN bas_goods_info bgi
+          ON pg.spd_goods_code = bgi.id
+        <where>
+            pg.flag = '1'
+            <if test='provGoodsName != null and provGoodsName !=""'>
+                <bind name="provGoodsName" value="'%' + provGoodsName + '%'"/>
+                and (pg.goods_name like #{provGoodsName} or pg.goods_gg like #{provGoodsName} or pg.erp_code like
+                #{provGoodsName} )
+            </if>
+            <if test='provId != null and provId !=""'>
+                and pg.prov_id = #{provId}
+            </if>
+            <if test='isAll != null and isAll !="" and isAll=="0"'>
+                AND NOT EXISTS ( select id from hos_goods_info WHERE hos_id = #{hosId} AND flag = '1' AND prov_id = pg.prov_id
+                AND spd_goods_code = bgi.code)
+            </if>
+        </where>
+    </select>
+</mapper>

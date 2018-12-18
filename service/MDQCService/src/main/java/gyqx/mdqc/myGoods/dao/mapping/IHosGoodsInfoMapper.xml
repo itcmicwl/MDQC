@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="gyqx.mdqc.myGoods.dao.mapper.IHosGoodsInfoMapper">
+    <insert id="insertProvHosInfo">
+        INSERT INTO prov_hos_info (id, prov_id, hos_id, status, uxid, fill_date, last_update_datetime, version)
+        VALUE (#{id}, #{provId}, #{hosId}, #{status}, #{uxid}, #{fillDate}, #{lastUpdateDatetime}, #{version})
+    </insert>
+    <!-- parameterType传入参数类型     resultMap=自己定义的一个返回类型     resultType返回类型 -->
+	<select id="list"  resultMap="hosGoodsInfoMap" parameterType="gyqx.mdqc.myGoods.vo.HosGoodsInfoVo">
+		select hgi.brand,hgi.code,hgi.erp_code,hgi.general_name,hgi.goods_gg,hgi.goods_name,
+		hgi.hos_id,hgi.id,hgi.kind_68code,hgi.kind_code,hgi.made,hgi.master_code,hgi.mfrs_code,
+		hgi.mfrs_id,hgi.packeage,hgi.price,hgi.short_pinyin,hgi.spd_goods_code,hgi.tax_rate,hgi.unit,hgi.remark,bci.cname as cname,bmi.mfrs_name as mfrs_name
+		from hos_goods_info hgi LEFT join bas_company_info bci
+		on hgi.prov_id = bci.id
+		LEFT join bas_mfrs_info bmi
+		on hgi.mfrs_id = bmi.id
+		<where>
+			1=1 and hgi.flag=1
+			<if test='goodsName != null and goodsName !=""'>
+				<bind name="goodsName" value="'%' + goodsName + '%'" />
+				and
+				(
+				hgi.goods_name like  #{goodsName}
+				or hgi.short_pinyin like  #{goodsName}
+				or hgi.goods_gg like #{goodsName}
+				)
+			</if>
+			<if test='provId != null and provId !=""'>
+				and hgi.prov_id= #{provId}
+			</if>
+			<if test='hosId != null and hosId !=""'>
+				and hgi.hos_id= #{hosId}
+			</if>
+			order by hgi.goods_name DESC
+		</where>
+	</select>
+ 	<resultMap type="gyqx.mdqc.myGoods.vo.HosGoodsInfoVo" id="hosGoodsInfoMap">
+		<id property="id" column="id"/>
+		<result property="hosId"  column="hos_id"/>
+		<result property="provId"  column="prov_id"/>
+		<result property="code"  column="code"/>
+		<result property="goodsName"  column="goods_name"/>
+		<result property="shortPinyin"  column="short_pinyin"/>
+		<result property="goodsGg"  column="goods_gg"/>
+		<result property="made"  column="made"/>
+		<result property="mfrsId"  column="mfrs_id"/>
+		<result property="unit"  column="unit"/>
+		<result property="packeage"  column="packeage"/>
+		<result property="price"  column="price"/>
+		<result property="taxRate"  column="tax_rate"/>
+		<result property="masterCode"  column="master_code"/>
+		<result property="mfrsCode"  column="mfrs_code"/>
+		<result property="kindCode"  column="kind_code"/>
+		<result property="kind68code"  column="kind_68code"/>
+		<result property="erpCode"  column="erp_code"/>
+		<result property="spdGoodsCode"  column="spd_goods_code"/>
+		<result property="brand"  column="brand"/>
+		<result property="generalName"  column="general_name"/>
+		<result property="remark"  column="remark"/>
+		<result property="cname"  column="cname"/>
+		<result property="mfrsName"  column="mfrs_name"/>
+	</resultMap>
+	<select id="getProvList" resultMap="ProvIdAndNameResult" parameterType="gyqx.mdqc.myGoods.vo.HosGoodsInfoVo">
+		select a.id as provId,a.cname as cname from bas_company_info a
+		left join prov_goods_hos b on a.id = b.prov_id
+		<where>
+			a.kind = 2
+			<if test='hosId != null and hosId !=""'>
+				and b.hos_id = #{hosId}
+			</if>
+		</where>
+		group by a.id ,a.cname
+	</select>
+	<resultMap id="ProvIdAndNameResult" type="gyqx.mdqc.myGoods.vo.ProvIdAndNameVo">
+		<result property="cname"  column="cname"/>
+		<result property="provId"  column="provId"/>
+	</resultMap>
+	<delete id="deleteByPKey" parameterType="gyqx.mdqc.po.HosGoodsInfo">
+		DELETE FROM hos_goods_info
+		WHERE id=#{id}
+	</delete>
+	<select id="getProGoods4HosList" resultType="gyqx.mdqc.myGoods.vo.ProvGoods4HosVo"
+			parameterType="gyqx.mdqc.myGoods.vo.ProvGoods4HosVo">
+		SELECT pgvo.mfrsName as provGoodsMfrsName,
+		pgvo.code as provGoodsCode,
+		pgvo.goods_name as provGoodsName,
+		pgvo.short_pinyin as provGoodsShortPinyin,
+		pgvo.goods_gg as provGoodsGg,
+		pgvo.made as provGoodsMade,
+		pgvo.mfrs_id as provGoodsMfrsId,
+		pgvo.unit as provGoodsUnit,
+		pgvo.packeage AS provGoodsPackeage,
+		pgvo.master_code as provGoodsMasterCode,
+		pgvo.mfrs_code as provGoodsMfrsCode,
+		pgvo.kind_code as provGoodsKindCode,
+		pgvo.kind_68code AS provGoodsKind68code,
+		pgvo.erp_code AS provGoodsErpCode,
+		pgvo.hit_code AS provGoodsHitCode,
+		pgvo.hit_price as provGoodsHitPrice,
+		pgvo.spd_goods_code AS provGoodsSpdGoodsCode,
+		pgvo.lbsx AS provGoodsLbsx,
+		pgvo.provName as provName,
+		pgvo.brand as brand,
+		pg4h.id as id,
+		pg4h.prov_id as provId,
+		pg4h.hos_id as hosId,
+		pg4h.prov_goodsid as provGoodsid,
+		pg4h.his_code as  hisCode,
+		pg4h.his_name as  hisName,
+		pg4h.his_unit as hisUnit,
+		pg4h.pur_price as purPrice,
+		pg4h.sale_price as salePrice,
+		pg4h.unit_rate as  unitRate,
+		pg4h.data_source as  dataSource,
+		pg4h.tax_rate as  taxRate
+
+		from prov_goods_hos  pg4h
+		left join (select m.mfrs_name as mfrsName, pg.id as provGoodsId,c.cname as provName,
+		pg.* from prov_goods_info pg left join bas_mfrs_info m on pg.mfrs_id = m.id
+		JOIN bas_company_info c ON pg.prov_id=c.id) pgvo
+		on pg4h.prov_goodsid=pgvo.provGoodsId
+		<where>
+			pgvo.flag =1 and pg4h.flag=1
+			<if test='hosId != null and hosId !=""'>
+				and pg4h.hos_id = #{hosId}
+			</if>
+			<if test='provGoodsName != null and provGoodsName !=""'>
+				<bind name="provGoodsName" value="'%' + provGoodsName + '%'" />
+				and (pgvo.goods_name like #{provGoodsName} or pgvo.goods_gg like #{provGoodsName} or pgvo.erp_code  like #{provGoodsName} )
+			</if>
+			<choose>
+				<when test='provId != null and provId !=""'>
+					and pg4h.prov_id = #{provId}
+				</when>
+			</choose>
+			<if test='isAll != null and isAll !="" and isAll=="0"'>
+				AND  pgvo.spd_goods_code NOT in ( select spd_goods_code from hos_goods_info where hos_id=#{hosId} and flag =1 and prov_id = pg4h.prov_id )
+			</if>
+		</where>
+	</select>
+
+	<select id="getHosProvInfoVoList" resultMap="provHosInfoVoResult"
+			parameterType="gyqx.mdqc.myGoods.vo.ProvHosInfoVo">
+		SELECT p.*,c.prov_name
+		FROM prov_hos_info p
+		LEFT JOIN (SELECT b.id, b.cname prov_name, b.kind
+		from bas_company_info b
+		where b.kind = 2) c
+		on p.prov_id = c.id
+		<where> 1=1 and p.status=2 and p.hos_id = #{hosId}
+			<if test='provName != null and provName !=""'>
+				and c.prov_name like CONCAT('%',#{provName},'%')
+			</if>
+			<if test='provLxr != null and provLxr !=""'>
+				and p.prov_lxr like CONCAT('%',#{provLxr},'%')
+			</if>
+		</where>
+	</select>
+	<resultMap type="gyqx.mdqc.myGoods.vo.ProvHosInfoVo" id="provHosInfoVoResult">
+		<id property="id" column="id"/>
+		<result property="provId"  column="prov_id"/>
+		<result property="provName"  column="prov_name"/><!-- 供应商名称 -->
+		<result property="hosId"  column="hos_id"/>
+		<result property="hosName"  column="hos_name"/><!-- 医院名称 -->
+		<result property="hosLxr"  column="hos_lxr"/><!-- 医院联系人 -->
+		<result property="hosLxrTelphonenum"  column="hos_lxr_telphonenum"/><!-- 医院联系方式 -->
+		<result property="provLxr"  column="prov_lxr"/><!-- 配送商联系人 -->
+		<result property="provLxrTelphonenum"  column="prov_lxr_telphonenum"/><!-- 配送商联系方式 -->
+		<result property="status"  column="status"/>
+		<result property="remark"  column="remark"/>
+		<result property="hosRemark"  column="hos_remark"/>
+		<result property="uid"  column="uxid"/>
+		<result property="fillDate"  column="fill_date"/>
+		<result property="lastUpdateDatetime"  column="last_update_datetime"/>
+		<result property="version"  column="version"/>
+	</resultMap>
+</mapper>

@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="gyqx.mdqc.mycerts.dao.mapper.IProvRegistrationMapper">
+    <select id="listProvCert" parameterType="gyqx.mdqc.mycerts.vo.ProvRegistrationVo"
+            resultMap="listProvCertResultMap">
+        SELECT provcert.id,provcert.prov_id, provcert.reg_kind, provcert.product_name, provcert.certificate_code,
+        provcert.mfrs_id, provcert.expdt_begin_date,
+        provcert.expdt_end_date, provcert.is_old_info, provcert.version, comp.cname AS mfrs_name
+        FROM prov_registration_info provcert
+        LEFT OUTER JOIN bas_company_info comp ON (provcert.mfrs_id = comp.id AND comp.kind = 3)
+        <where>
+            1=1
+            <if test="searchName != null and searchName != '' ">
+                <bind name="searchName" value="'%'+searchName+'%'"/>
+                and
+                (provcert.product_name LIKE #{searchName} OR provcert.certificate_code LIKE #{searchName})
+            </if>
+            <if test="regKind != null and regKind != ''">
+                AND provcert.reg_kind = #{regKind}
+            </if>
+            <if test="mfrsId != null and mfrsId != ''">
+                AND provcert.mfrs_id = #{mfrsId}
+            </if>
+            <if test="provId != null and provId != ''">
+                AND provcert.prov_id = #{provId}
+            </if>
+            ORDER BY provcert.product_name, comp.cname, provcert.is_old_info
+        </where>
+    </select>
+    <resultMap id="listProvCertResultMap" type="gyqx.mdqc.mycerts.vo.ProvRegistrationVo">
+        <id property="id" column="id"/>
+        <result property="regKind" column="reg_kind"/>
+        <result property="productName" column="product_name"/>
+        <result property="certificateCode" column="certificate_code"/>
+        <result property="mfrsId" column="mfrs_id"/>
+        <result property="mfrsName" column="mfrs_name"/>
+        <result property="expdtBeginDate" column="expdt_begin_date"/>
+        <result property="expdtEndDate" column="expdt_end_date"/>
+        <result property="isOldInfo" column="is_old_info"/>
+        <result property="uxid" column="uxid"/>
+        <result property="fillDate" column="fill_date"/>
+        <result property="lastUpdateDatetime" column="last_update_datetime"/>
+        <result property="version" column="version"/>
+    </resultMap>
+    <select id="listMfrsForProId" resultType="gyqx.mdqc.mycerts.vo.IdNameVo">
+         select provCert.mfrs_id as id,comp.cname as name from prov_registration_info provCert
+          left join bas_company_info comp on provCert.mfrs_id = comp.id AND comp.kind = 3
+          where provCert.prov_id = #{provId}
+          group by provCert.mfrs_id,comp.cname
+    </select>
+    <select id="getProvCertById" resultMap="getProvCertByIdResultMap">
+        SELECT
+        provCert.id, provCert.prov_id, provCert.reg_kind, provCert.product_name,
+        provCert.certificate_code, provCert.mfrs_id, provCert.expdt_begin_date, provCert.expdt_end_date,
+        provCert.is_old_info, provCert.uxid, provCert.fill_date, provCert.last_update_datetime, provCert.version,
+        comp.cname as mfrsName,
+        provGoods.id as provGoods_id,provGoods.prov_id as provGoods_prov_id,provGoods.certificate_id as
+        provGoods_certificate_id,
+        provGoods.goods_id as provGoods_goods_id,provGoods.uxid as provGoods_uxid,
+        provGoods.fill_date as provGoods_fill_date,provGoods.last_update_datetime as provGoods_last_update_datetime,
+        provGoods.version as provGoods_version,
+        pg.goods_name as provGoods_goodsName,pg.goods_gg as provGoods_goodsGg,pg.unit as provGoods_unit,
+        provImg.id as provImg_id,provImg.prov_id as provImg_prov_id ,provImg.certificate_id as provImg_certificate_id,
+        provImg.file_path as provImg_file_path,
+        provImg.fill_date as provImg_fill_date ,provImg.uxid as provImg_uxid ,provImg.last_update_datetime as
+        provImg_last_update_datetime ,
+        provImg.version as provImg_version
+        FROM prov_registration_info provCert
+        LEFT JOIN prov_registration_image provImg ON provImg.certificate_id = provCert.id
+        LEFT JOIN prov_regist_goods provGoods ON provGoods.certificate_id = provCert.id
+        LEFT JOIN bas_company_info comp ON (provCert.mfrs_id = comp.id AND comp.kind = 3)
+        LEFT JOIN prov_goods_info pg ON provGoods.goods_id = pg.id
+        <where>
+            1=1
+            <if test="mfrsId != null and mfrsId != ''">
+                AND provCert.mfrs_id = #{mfrsId}
+            </if>
+            <if test="id != null and id != ''">
+                AND provCert.id = #{id}
+            </if>
+            <if test="provId != null and provId != ''">
+                AND pg.prov_id = #{provId}
+            </if>
+        </where>
+    </select>
+    <resultMap id="getProvCertByIdResultMap" type="gyqx.mdqc.mycerts.vo.ProvRegistrationVo" autoMapping="true">
+        <id column="id" property="id"/>
+        <collection property="listGoods" autoMapping="true" columnPrefix="provGoods_"
+                    ofType="gyqx.mdqc.mycerts.vo.ProvRegistGoodsVo">
+            <id property="id" column="id"/>
+        </collection>
+        <collection property="listImages" autoMapping="true" columnPrefix="provImg_"
+                    ofType="gyqx.mdqc.po.ProvRegistrationImage">
+            <id property="id" column="id"/>
+        </collection>
+    </resultMap>
+
+    <select id="getBasCert" resultMap="BasRegistrationInfoResultMap">
+        SELECT cert.id, cert.certificate_code, cert.expdt_begin_date, cert.expdt_end_date, cert.is_old_info,
+        cert.mfrs_id, cert.reg_kind, cert.version, cert.product_name, comp.cname AS mfrs_name,
+        img.id AS img_id, img.certificate_id AS img_certificate_id, img.file_path AS img_file_path,img.version AS img_version,
+        goods.id AS goods_id,goods.certificate_id as goods_certificate_id, goods.version AS goods_version,
+        goods_info.id AS goods_goods_id, goods_info.goods_name AS goods_goods_name, goods_info.goods_gg AS goods_goods_gg,
+        goods_info.unit as goods_unit
+        FROM bas_registration_info cert
+        LEFT OUTER JOIN bas_registration_image img ON img.certificate_id = cert.id
+        LEFT OUTER JOIN bas_regist_goods goods ON goods.certificate_id = cert.id
+        LEFT OUTER JOIN bas_goods_info goods_info ON goods_info.id = goods.goods_id
+        INNER JOIN prov_goods_info pgi ON pgi.spd_goods_code = goods_info.id
+        LEFT OUTER JOIN bas_company_info comp ON (cert.mfrs_id = comp.id AND comp.kind = 3)
+        WHERE
+        cert.is_old_info = '0' AND
+        cert.certificate_code = #{certificateCode} AND cert.mfrs_id = #{mfrsId}
+    </select>
+
+    <resultMap id="BasRegistrationInfoResultMap" type="gyqx.mdqc.mycerts.vo.ProvRegistrationVo" autoMapping="true">
+        <id column="id" property="id"/>
+        <collection property="listImages" autoMapping="true" columnPrefix="img_" ofType="gyqx.mdqc.po.ProvRegistrationImage">
+            <id property="id" column="id"/>
+        </collection>
+        <collection property="listGoods" autoMapping="true" columnPrefix="goods_" ofType="gyqx.mdqc.mycerts.vo.ProvRegistGoodsVo">
+            <id property="id" column="id"/>
+        </collection>
+    </resultMap>
+
+    <select id="getMfrsProduct" resultType="gyqx.mdqc.mycerts.vo.ProvBasGoodsInfoVo">
+        SELECT id, id AS goodsId, goods_name as goodsName, goods_gg as goodsGg,unit, version
+        FROM prov_goods_info
+        WHERE
+        mfrs_id = #{mfrsId} and prov_id = #{provId}
+        <if test="input != null and input != ''">
+            <bind name="input_bind" value="'%'+input+'%'"/>
+            AND (goods_name LIKE #{input_bind} OR short_pinyin LIKE #{input_bind} OR goods_gg LIKE #{input_bind})
+        </if>
+    </select>
+    <insert id="insertProvCert">
+        INSERT INTO prov_registration_info (id, prov_id,reg_kind, product_name, certificate_code, mfrs_id, expdt_begin_date,
+        expdt_end_date, is_old_info, uxid, fill_date, last_update_datetime, version)
+        VALUES (#{vo.id}, #{vo.provId},#{vo.regKind}, #{vo.productName}, #{vo.certificateCode}, #{vo.mfrsId}, #{vo.expdtBeginDate},
+        #{vo.expdtEndDate}, #{vo.isOldInfo}, #{operId}, SYSDATE, SYSDATE, 0)
+    </insert>
+    <insert id="insertCertImg">
+        INSERT INTO prov_registration_image (id , prov_id , certificate_id , file_path , fill_date , uxid , last_update_datetime , version)
+        <foreach collection="vo" item="item" separator="UNION ALL">
+            (SELECT #{item.id},#{item.provId}, #{item.certificateId}, #{item.filePath}, SYSDATE, #{operId}, SYSDATE, 0 FROM DUAL)
+        </foreach>
+    </insert>
+    <insert id="insertCertGoods">
+        INSERT INTO prov_regist_goods (id , prov_id , certificate_id , goods_id , uxid , fill_date , last_update_datetime , version)
+        <foreach collection="vo" separator="UNION ALL" item="item">
+            (SELECT #{item.id},#{item.provId}, #{item.certificateId}, #{item.goodsId}, #{operId}, SYSDATE, SYSDATE, 0 FROM DUAL)
+        </foreach>
+    </insert>
+    <delete id="delCertImg">
+        DELETE FROM prov_registration_image WHERE id IN
+        <foreach collection="vo" item="item" open="(" close=")" separator=",">
+            #{item.id}
+        </foreach>
+    </delete>
+    <delete id="delCertGoods">
+        DELETE FROM prov_regist_goods WHERE id IN
+        <foreach collection="vo" item="item" open="(" close=")" separator=",">
+            #{item.id}
+        </foreach>
+    </delete>
+    <update id="changeGoodsCertificateCode">
+       UPDATE bas_goods_info goods
+            SET goods.certificate_code = (
+            SELECT certificate_code FROM prov_registration_info WHERE id = #{certId}),
+                uxid = #{operId}, goods.version = goods.version + 1, goods.last_update_datetime = SYSDATE
+            WHERE goods.id IN (SELECT goods_id FROM prov_regist_goods WHERE certificate_id = #{certId})
+    </update>
+</mapper>

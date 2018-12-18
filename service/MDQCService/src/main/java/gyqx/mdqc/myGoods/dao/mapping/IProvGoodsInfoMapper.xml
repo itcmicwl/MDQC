@@ -1,0 +1,235 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="gyqx.mdqc.myGoods.dao.mapper.IProvGoodsInfoMapper">
+<!-- parameterType传入参数类型     resultMap=自己定义的一个返回类型     resultType返回类型 -->
+	<select id="list"  resultMap="provGoodsInfoMap" parameterType="gyqx.mdqc.myGoods.vo.ProvGoodsInfoVo">
+		select m.mfrs_name as mfrsName,pg.id,pg.brand,pg.certificate_code,pg.code,pg.erp_code,pg.goods_gg,pg.goods_name,
+		pg.kind_68code,pg.kind_code,pg.made,pg.master_code,pg.mfrs_id,pg.packeage,pg.prov_id,pg.short_pinyin,pg.unit,
+		pg.spd_goods_code,pg.mfrs_code,pg.remark from  prov_goods_info  pg
+		left JOIN bas_mfrs_info m
+		on pg.mfrs_id = m.id
+		<where>
+			1=1 and pg.flag=1
+			<if test='goodsName != null and goodsName !=""'>
+				<bind name="goodsName" value="'%' + goodsName + '%'" />
+				and
+				(
+				pg.goods_name like  #{goodsName}
+				or pg.short_pinyin like  #{goodsName}
+				or pg.goods_gg like #{goodsName}
+				)
+			</if>
+			<if test='provId != null and provId !=""'>
+				and pg.prov_id= #{provId}
+			</if>
+			<if test='mfrsId != null and mfrsId !=""'>
+				and m.mfrs_id= #{mfrsId}
+			</if>
+			order by pg.goods_name DESC
+		</where>
+	</select>
+ 	<resultMap type="gyqx.mdqc.myGoods.vo.ProvGoodsInfoVo" id="provGoodsInfoMap" autoMapping="true">
+		<id property="id" column="id"/>
+	</resultMap>
+
+	<select id="getBasMfrsInfoList"  resultMap="basMfrsInfoPoResult"
+			parameterType="gyqx.mdqc.myGoods.vo.BasMfrsInfoVo">
+		SELECT ouser.ename,ouser.cname,mfrs.* FROM bas_mfrs_info mfrs  LEFT JOIN sys_user_org ouser ON mfrs.uxid = ouser.user_id
+		<where>
+			<if test='mfrsKind != null and mfrsKind !=""'>
+				and mfrs.mfrs_kind = #{mfrsKind}
+			</if>
+			<if test='mfrsName != null and mfrsName !=""'>
+				<bind name="mfrsName" value="'%' + mfrsName + '%'" />
+				and mfrs.mfrs_name like #{mfrsName}
+			</if>
+		</where>
+		ORDER BY mfrs.last_update_datetime desc
+	</select>
+	<resultMap type="gyqx.mdqc.myGoods.vo.BasMfrsInfoVo" id="basMfrsInfoPoResult">
+		<id property="id" column="id"/>
+		<result property="ename"  column="ename"/>
+		<result property="cname"  column="cname"/>
+		<result property="mfrsKind"  column="mfrs_kind"/>
+		<result property="mfrsName"  column="mfrs_name"/>
+		<result property="agentName"  column="agent_name"/>
+		<result property="regCode"  column="reg_code"/>
+		<result property="jyxkCode"  column="jyxk_code"/>
+		<result property="nsrsbCode"  column="nsrsb_code"/>
+		<result property="productCode"  column="product_code"/>
+		<result property="recordCard"  column="record_card"/>
+		<result property="remark"  column="remark"/>
+		<result property="isThreeInOne"  column="is_three_in_one"/>
+		<result property="flag"  column="flag"/>
+		<result property="uxid"  column="uxid"/>
+		<result property="fillDate"  column="fill_date"/>
+		<result property="lastUpdateDatetime"  column="last_update_datetime"/>
+		<result property="version"  column="version"/>
+	</resultMap>
+
+	<update id="update" parameterType="gyqx.mdqc.myGoods.vo.ProvGoodsInfoVo" >
+		update prov_goods_info
+		<set>
+			<if test='provId != null'>
+				prov_id = #{provId},
+			</if>
+			<if test='code != null'>
+				code = #{code},
+			</if>
+			<if test='goodsName != null'>
+				goods_name = #{goodsName},
+			</if>
+			<if test='shortPinyin != null'>
+				short_pinyin = #{shortPinyin},
+			</if>
+			<if test='goodsGg != null'>
+				goods_gg = #{goodsGg},
+			</if>
+			<if test='made != null'>
+				made = #{made},
+			</if>
+			<if test='mfrsId != null'>
+				mfrs_id = #{mfrsId},
+			</if>
+			<if test='unit != null'>
+				unit = #{unit},
+			</if>
+			<if test='packeage != null'>
+				packeage = #{packeage},
+			</if>
+			<if test='masterCode != null'>
+				master_code = #{masterCode},
+			</if>
+			<if test='mfrsCode != null'>
+				mfrs_code = #{mfrsCode},
+			</if>
+			<if test='kindCode != null'>
+				kind_code = #{kindCode},
+			</if>
+			<if test='kind68code != null'>
+				kind_68code = #{kind68code},
+			</if>
+			<if test='erpCode != null'>
+				erp_code = #{erpCode},
+			</if>
+			<if test='hitCode != null'>
+				hit_code = #{hitCode},
+			</if>
+			<if test='hitPrice != null'>
+				hit_price = #{hitPrice},
+			</if>
+			<if test='spdGoodsCode != null'>
+				spd_goods_code = #{spdGoodsCode},
+			</if>
+			<if test='fieldCode2 != null'>
+				field_code2 = #{fieldCode2},
+			</if>
+			<if test='fieldCode3 != null'>
+				field_code3 = #{fieldCode3},
+			</if>
+			<if test='fieldCode4 != null'>
+				field_code4 = #{fieldCode4},
+			</if>
+			<if test='certificateCode != null'>
+				certificate_code = #{certificateCode},
+			</if>
+			<if test='lbsx != null'>
+				lbsx = #{lbsx},
+			</if>
+			<if test='remark != null'>
+				remark = #{remark},
+			</if>
+			<if test='flag != null'>
+				flag = #{flag},
+			</if>
+			<if test='brand != null'>
+				brand = #{brand},
+			</if>
+			<if test='stCondition != null'>
+				st_condition = #{stCondition},
+			</if>
+			<if test='uxid != null'>
+				uxid = #{uxid},
+			</if>
+			<if test='fillDate != null'>
+				fill_date = #{fillDate},
+			</if>
+			<if test='lastUpdateDatetime != null'>
+				last_update_datetime = #{lastUpdateDatetime},
+			</if>
+			version=version+1,
+		</set>
+		<where>
+			and id = #{id}
+			and version= #{version}
+		</where>
+	</update>
+
+	<insert id="insert" parameterType="gyqx.mdqc.myGoods.vo.ProvGoodsInfoVo" >
+		insert into prov_goods_info
+		( id , prov_id , code , goods_name , short_pinyin , goods_gg , made , mfrs_id , unit , packeage , master_code , mfrs_code , kind_code , kind_68code , erp_code , hit_code , hit_price , spd_goods_code , field_code2 , field_code3 , field_code4 , certificate_code , lbsx , remark , flag , brand , st_condition , uxid , fill_date , last_update_datetime , version  )
+		values (#{id},#{provId},#{code},#{goodsName},#{shortPinyin},#{goodsGg},#{made},#{mfrsId},#{unit},#{packeage},#{masterCode},#{mfrsCode},#{kindCode},#{kind68code},#{erpCode},#{hitCode},#{hitPrice},#{spdGoodsCode},#{fieldCode2},#{fieldCode3},#{fieldCode4},#{certificateCode},#{lbsx},#{remark},#{flag},#{brand},#{stCondition},#{uxid},#{fillDate},#{lastUpdateDatetime},#{version})
+	</insert>
+
+	<update id="deleteByPKey" parameterType="gyqx.mdqc.po.ProvGoodsInfo">
+		UPDATE prov_goods_info SET FLAG = 0, VERSION = VERSION + 1, LAST_UPDATE_DATETIME = SYSDATE
+		WHERE flag = 1 AND id IN #{id}
+	</update>
+
+	<select id="getBasGoodsInfoList" resultMap="bGoodsVoMap"
+			parameterType="gyqx.mdqc.myGoods.vo.BasGoodsInfoVo">
+		select m.mfrs_name as mfrsName,bg.* from  bas_goods_info  bg
+		left JOIN bas_mfrs_info m  on bg.mfrs_id = m.id
+		<where>
+			1=1 and bg.flag=1
+			<if test='goodsName != null and goodsName !=""'>
+				<bind name="goodsName" value="'%' + goodsName + '%'" />
+				and
+				(
+				bg.goods_name like  #{goodsName}
+				or bg.short_pinyin like  #{goodsName}
+				or bg.goods_gg like  #{goodsName}
+				)
+
+			</if>
+			<if test='mfrsName != null and mfrsName !=""'>
+				<bind name="mfrsName" value="'%' + mfrsName + '%'" />
+				and m.mfrs_name like  #{mfrsName}
+
+			</if>
+			order by bg.id
+		</where>
+	</select>
+
+	<resultMap type="gyqx.mdqc.myGoods.vo.BasGoodsInfoVo" id="bGoodsVoMap">
+		<id property="id" column="id"/>
+		<id property="code" column="code"/>
+		<result property="goodsName"  column="goods_name"/>
+		<result property="shortPinyin"  column="short_pinyin"/>
+		<result property="goodsGg"  column="goods_gg"/>
+		<result property="brand"  column="brand"/>
+		<result property="made"  column="made"/>
+		<result property="mfrsId"  column="mfrs_id"/>
+		<result property="unit"  column="unit"/>
+		<result property="packeage"  column="packeage"/>
+		<result property="masterCode"  column="master_code"/>
+		<result property="mfrsCode"  column="mfrs_code"/>
+		<result property="kindCode"  column="kind_code"/>
+		<result property="kind68code"  column="kind_68code"/>
+		<result property="fieldCode1"  column="field_code1"/>
+		<result property="fieldCode2"  column="field_code2"/>
+		<result property="fieldCode3" column="field_code3"/>
+		<result property="fieldCode4" column="field_code4"/>
+		<result property="certificateCode" column="certificate_code"/>
+		<result property="lbsx" column="lbsx"/>
+		<result property="flag" column="flag"/>
+		<result property="remark" column="remark"/>
+		<result property="uid" column="uxid"/>
+		<result property="fillDate" column="fill_date"/>
+		<result property="lastUpdateDatetime" column="last_update_datetime"/>
+		<result property="version" column="version"/>
+		<result property="mfrsName" column="mfrsName"/>
+	</resultMap>
+</mapper>
